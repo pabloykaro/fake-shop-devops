@@ -249,10 +249,46 @@ def remove_item(item_id):
     return redirect(url_for('cart'))
 
 
+@app.route('/ip-info')
+def ip_info():
+    """Rota específica para exibir informações detalhadas de IP."""
+    # Coleta todas as informações de cabeçalhos relacionadas a IP
+    headers = {}
+    headers['Remote-Addr'] = request.remote_addr
+    headers['X-Forwarded-For'] = request.headers.get('X-Forwarded-For', 'Não disponível')
+    headers['X-Real-IP'] = request.headers.get('X-Real-IP', 'Não disponível')
+    headers['X-Forwarded-Host'] = request.headers.get('X-Forwarded-Host', 'Não disponível')
+    headers['X-Forwarded-Proto'] = request.headers.get('X-Forwarded-Proto', 'Não disponível')
+    
+    # Determina o IP mais provável do cliente
+    ip_cliente = request.remote_addr
+    
+    if headers['X-Forwarded-For'] != 'Não disponível':
+        ip_cliente = headers['X-Forwarded-For'].split(',')[0].strip()
+    elif headers['X-Real-IP'] != 'Não disponível':
+        ip_cliente = headers['X-Real-IP']
+    
+    return render_template('ip_info.html', ip_cliente=ip_cliente, headers=headers)
+
+
 @app.route('/')
 def index():
+    # Obtém o IP do usuário
+    ip_cliente = request.remote_addr  # IP nativo/direto
+    
+    # Verifica se há um IP no header X-Forwarded-For (caso esteja atrás de proxy/load balancer)
+    forwarded_ip = request.headers.get('X-Forwarded-For')
+    if forwarded_ip:
+        # X-Forwarded-For pode conter múltiplos IPs separados por vírgula
+        # O primeiro IP na lista é o IP original do cliente
+        ip_cliente_real = forwarded_ip.split(',')[0].strip()
+        print(f"IP via X-Forwarded-For: {ip_cliente_real}, IP nativo: {ip_cliente}")
+    else:
+        ip_cliente_real = ip_cliente
+        print(f"IP nativo: {ip_cliente}")
+    
     products = Product.query.all()
-    return render_template('index.html', products=products)
+    return render_template('index.html', products=products, ip_cliente=ip_cliente_real)
 
 if __name__ == '__main__':
     #apply_migrations()

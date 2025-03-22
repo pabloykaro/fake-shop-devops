@@ -1,0 +1,61 @@
+{% extends 'shared/base.html' %}
+
+{% block content %}
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-secondary text-center p-4">
+                    <h1 class="text-primary m-0">Informações de IP</h1>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <h4>Seu IP identificado: <span class="text-primary">{{ ip_cliente }}</span></h4>
+                            <p class="text-muted">Abaixo estão os detalhes técnicos de como seu IP foi determinado.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="bg-secondary text-dark">
+                                <tr>
+                                    <th>Cabeçalho</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for header, value in headers.items() %}
+                                <tr>
+                                    <td>{{ header }}</td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5>Como seu IP é determinado?</h5>
+                                <p>O sistema tenta identificar seu IP real nesta ordem:</p>
+                                <ol>
+                                    <li>Cabeçalho X-Forwarded-For (primeiro IP na lista, se disponível)</li>
+                                    <li>Cabeçalho X-Real-IP (se disponível)</li>
+                                    <li>Endereço IP remoto direto (Remote-Addr)</li>
+                                </ol>
+                                <p>Em ambientes com proxies, load balancers ou CDNs, seu IP real geralmente é fornecido pelos cabeçalhos "X-Forwarded-For" ou "X-Real-IP".</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary py-2 px-4">Voltar para a loja</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

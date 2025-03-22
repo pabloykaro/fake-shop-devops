@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phobos-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phobos-db
+  template:
+    metadata:
+      labels:
+        app: phobos-db
+    spec:
+      containers:
+        - name: phobos-db
+          image: postgres:13.16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: ecommerce
+            - name: POSTGRES_PASSWORD
+              value: Pg1234
+            - name: POSTGRES_DB
+              value: ecommerce
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-phobos-db-svc
+spec:
+  selector:
+    app: phobos-db
+  type: ClusterIP
+  ports:
+   - port: 5432
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fakeshop-bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fakeshop-bff
+  template:
+    metadata:
+      labels:
+        app: fakeshop-bff
+    spec:
+      containers:
+        - name: fakeshop-bff
+          image: pabloykaro/fake-shop:v3
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DB_HOST
+              value: private-phobos-db-svc
+            - name: DB_USER
+              value: ecommerce
+            - name: DB_PASSWORD
+              value: Pg1234
+            - name: DB_NAME
+              value: ecommerce
+            - name: FLASK_APP
+              value: index.py
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: public-fakeshop-bff-svc
+spec:
+  selector:
+    app: fakeshop-bff
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+
