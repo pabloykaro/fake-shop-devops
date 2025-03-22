@@ -1,0 +1,48 @@
+name: Deploy Fake Shop
+run-name: Deploy Fake Shop ${{ github.run_number }}
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platform: linux/amd64
+          context: src/
+          push: true
+          file: src/Dockerfile
+          tags: |
+            pabloykaro/fake-shop:${{github.run_number}}
+            pabloykaro/fake-shop:latest
+  cd:
+    name: CD
+    runs-on: ubuntu-latest
+    needs: [ci]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+      - name: Azure
+        uses: azure/k8s-set-context@v4
+        with:
+         method: kubeconfig
+         kubeconfig: ${{ secrets.K8S_KUBE_CONFIG }}
+      - name: Deploy to Digital Ocean
+        uses: Azure/k8s-deploy@v5
+        with:
+          manifests: |
+            k8s/deployment.yaml
+          images: |
+            pabloykaro/fake-shop:${{github.run_number}}
